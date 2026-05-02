@@ -340,3 +340,13 @@ Maestría en Ciencia de Datos — Curso de MLOps
 ## Licencia
 
 Proyecto académico desarrollado con fines educativos.
+
+## URL Repositirio
+
+[![Repositorio](https://img.shields.io/badge/GitHub-Ver_Repositorio-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/cqdirecly/EAN_MLOPS_TALLER4)
+
+**URL:** https://github.com/cqdirecly/EAN_MLOPS_TALLER4
+
+```bash
+git clone https://github.com/cqdirecly/EAN_MLOPS_TALLER4.git
+```
