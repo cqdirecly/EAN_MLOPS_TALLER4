@@ -1,0 +1,11 @@
+# MLflow
+mlruns/
+
+# Entorno virtual
+venv/
+
+# Modelos generados localmente
+*.pkl
+
+# Datos descargados (opcional, lo discutimos)
+# data/*.csv

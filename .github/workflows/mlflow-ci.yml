@@ -1,0 +1,94 @@
+# ==============================================================================
+# Workflow CI/CD: Pipeline de ML con MLflow
+# ==============================================================================
+# Proyecto: Wine Quality Regression
+# Autor:    Christian Quimbay
+# Curso:    MLOps - Maestria en Ciencia de Datos
+#
+# Este workflow se dispara automaticamente con cada push a la rama main
+# y ejecuta el pipeline completo: entrenamiento, registro en MLflow,
+# validacion y publicacion de artefactos.
+# ==============================================================================
+
+name: CI/CD para ML con MLflow - taller 4
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ml_pipeline:
+    name: Pipeline de Entrenamiento y Validacion
+    runs-on: ubuntu-latest
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. Clonar el repositorio en el runner
+      # ------------------------------------------------------------------
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # 2. Configurar Python 3.10
+      # ------------------------------------------------------------------
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # ------------------------------------------------------------------
+      # 3. Instalar dependencias del proyecto
+      # ------------------------------------------------------------------
+      - name: Instalar dependencias
+        run: make install
+
+      # ------------------------------------------------------------------
+      # 4. Entrenar modelo y registrar en MLflow
+      # ------------------------------------------------------------------
+      # Ejecuta train.py: carga datos, entrena RandomForestRegressor,
+      # calcula metricas y registra el modelo en mlruns/ con signature
+      # e input_example.
+      - name: Entrenar modelo
+        run: make train
+
+      # ------------------------------------------------------------------
+      # 5. Validar modelo contra umbrales de calidad
+      # ------------------------------------------------------------------
+      # Ejecuta validate.py: carga el modelo registrado en MLflow y lo
+      # evalua con datos externos. Si el MSE supera el umbral o el R2 es
+      # menor al minimo, este paso falla y detiene el pipeline.
+      - name: Validar modelo
+        run: make validate
+
+      # ------------------------------------------------------------------
+      # 6. Subir el modelo entrenado como artefacto
+      # ------------------------------------------------------------------
+      # Solo si los pasos anteriores pasaron exitosamente.
+      # El artefacto queda disponible para descargar desde la pestana Actions.
+      - name: Subir modelo como artefacto
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: modelo-validado
+          path: |
+            model.pkl
+            latest_run_id.txt
+          retention-days: 30
+
+      # ------------------------------------------------------------------
+      # 7. Subir tracking completo de MLflow como artefacto
+      # ------------------------------------------------------------------
+      # La carpeta mlruns/ contiene el experimento completo: parametros,
+      # metricas, signature, input_example y el modelo registrado.
+      # Permite auditoria completa del run desde GitHub.
+      - name: Subir mlruns como artefacto
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlruns-tracking
+          path: mlruns/
+          retention-days: 30
